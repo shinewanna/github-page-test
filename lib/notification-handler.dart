@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:gitpagetest/app-constant.dart';
 import 'package:gitpagetest/base-network.dart';
+import 'package:gitpagetest/resp.dart';
 import 'package:gitpagetest/shared-pref.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -51,8 +52,9 @@ class NotificationHandler extends BaseNetwork {
   configLocalNotification() {
     var initializationSettingsAndroid =
         new AndroidInitializationSettings('@mipmap/ic_launcher');
-    var initializationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
+    var initializationSettingsIOS = IOSInitializationSettings();
+    var initializationSettings = InitializationSettings(
+        android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
     flutterLocalNotificationsPlugin.initialize(initializationSettings,
         onSelectNotification: onSelectNotification);
   }
@@ -74,7 +76,15 @@ class NotificationHandler extends BaseNetwork {
       showNotification(message.notification);
     });
 
-    FirebaseMessaging.onBackgroundMessage(myBackgroundMessageHandler);
+    //FirebaseMessaging.onBackgroundMessage(myBackgroundMessageHandler);
+  }
+
+  test() {
+    _firebaseMessaging.sendMessage(
+      to: FirebaseConstant.token,
+      data: {'title': 'tt', 'body': 'bb'},
+      messageId: FirebaseConstant.token,
+    );
   }
 
   _addToken(String token) {
@@ -93,6 +103,7 @@ class NotificationHandler extends BaseNetwork {
         "id": "1",
         "status": "done"
       },
+      "topic": "all",
       "to": FirebaseConstant.token
     };
     final headers = {
@@ -100,13 +111,18 @@ class NotificationHandler extends BaseNetwork {
       'Authorization': FirebaseConstant.serverToken,
     };
 
-    await postReq(
+    Resp resp = await postReq(
       FirebaseConstant.sendUrl,
       "",
       fd: data,
       headers: headers,
       isReturnFuture: true,
     );
+    if (resp.message.isError) {
+      print(resp.data);
+    } else {
+      print('success');
+    }
   }
 }
 
