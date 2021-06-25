@@ -1,16 +1,14 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:gitpagetest/resp.dart';
-
 
 enum RequestType { getMethod, postMethod }
 
-class BaseNetwork  {
+class BaseNetwork {
   getReq(String baseUrl, String url,
-      {Map<String, String> params,
-      Function(Resp) onDataCallBack,
-      Function(Resp) errorCallBack,
+      {Map<String, String>? params,
+      Function(Resp)? onDataCallBack,
+      Function(Resp)? errorCallBack,
       bool isReturnFuture = false}) async {
     if (isReturnFuture)
       return await _requestData(RequestType.getMethod,
@@ -30,12 +28,12 @@ class BaseNetwork  {
   }
 
   postReq(String baseUrl, String url,
-      {Map<String, String> params,
-      Map<String, dynamic> fd,
-      Function(Resp) onDataCallBack,
-      Function(Resp) errorCallBack,
+      {Map<String, String>? params,
+      Map<String, dynamic>? fd,
+      Function(Resp)? onDataCallBack,
+      Function(Resp)? errorCallBack,
       bool isReturnFuture = false,
-      Map headers}) async {
+      Map<String, dynamic>? headers}) async {
     if (isReturnFuture)
       return await _requestData(
         RequestType.postMethod,
@@ -62,14 +60,14 @@ class BaseNetwork  {
   }
 
   _requestData(RequestType rt,
-      {@required String baseUrl,
-      @required String url,
-      Map<String, String> params,
-      Map<String, dynamic> fd,
-      Function(Resp) onDataCallBack,
-      Function(Resp) errorCallBack,
+      {required String baseUrl,
+      required String url,
+      Map<String, String>? params,
+      Map<String, dynamic>? fd,
+      Function(Resp)? onDataCallBack,
+      Function(Resp)? errorCallBack,
       bool isReturnFuture = false,
-      Map headers}) async {
+      Map<String, dynamic>? headers}) async {
     BaseOptions options = BaseOptions();
     options.baseUrl = baseUrl;
     options.connectTimeout = 10000;
@@ -100,13 +98,15 @@ class BaseNetwork  {
         }
       }
 
-      int statusCode = response.statusCode;
+      int statusCode = response.statusCode!;
 
       Resp respOb = new Resp(); //data,message,err
       respOb.data = response.data;
       respOb.message = MsgState.data;
+     
       if (isReturnFuture) return respOb;
-      onDataCallBack(respOb);
+      onDataCallBack!(respOb);
+
       if (statusCode == 200) {
         //data
         respOb.data = response.data;
@@ -118,7 +118,7 @@ class BaseNetwork  {
         respOb.message = MsgState.error;
         respOb.data = "Error";
         if (isReturnFuture) return respOb;
-        errorCallBack(respOb);
+        errorCallBack!(respOb);
       }
     } catch (e) {
       Resp respOb = new Resp(); //data,message,err
@@ -131,7 +131,7 @@ class BaseNetwork  {
       }
 
       if (isReturnFuture) return respOb;
-      errorCallBack(respOb);
+      errorCallBack!(respOb);
     }
   }
 }

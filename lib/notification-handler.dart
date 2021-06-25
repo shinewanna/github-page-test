@@ -10,10 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     new FlutterLocalNotificationsPlugin();
 
-Future<dynamic> myBackgroundMessageHandler(RemoteMessage message) {
-  showNotification(message.notification);
-  return Future<void>.value();
-}
+
 
 void showNotification(RemoteNotification noti) async {
   if (noti == null) return;
@@ -59,7 +56,7 @@ class NotificationHandler extends BaseNetwork {
         onSelectNotification: onSelectNotification);
   }
 
-  Future onSelectNotification(String payload) async {
+  Future<void> onSelectNotification(String? payload) async {
     if (payload != null) {
       //On Select Notification
     }
@@ -68,12 +65,12 @@ class NotificationHandler extends BaseNetwork {
   //!Can't stop showing foreground notification
   void registerNotification() {
     _firebaseMessaging
-        .requestPermission()
+        .requestPermission(provisional: true)
         .then((value) => _firebaseMessaging.getToken().then(_addToken));
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print(message.notification.body);
-      showNotification(message.notification);
+      print(message.notification!.body);
+      showNotification(message.notification!);
     });
 
     //FirebaseMessaging.onBackgroundMessage(myBackgroundMessageHandler);
@@ -87,12 +84,12 @@ class NotificationHandler extends BaseNetwork {
     );
   }
 
-  _addToken(String token) {
+  void _addToken(String? token) {
     print(token);
-    FirebaseConstant.token = token;
+    FirebaseConstant.token = token!;
   }
 
-  Future<void> sendNotification({String title, String subtitle}) async {
+  Future<void> sendNotification({String? title, String? subtitle}) async {
     await Future.delayed(Duration(seconds: 2));
     var data = {
       "notification": {"body": subtitle, "title": title},
@@ -103,7 +100,6 @@ class NotificationHandler extends BaseNetwork {
         "id": "1",
         "status": "done"
       },
-      "topic": "all",
       "to": FirebaseConstant.token
     };
     final headers = {
@@ -118,6 +114,7 @@ class NotificationHandler extends BaseNetwork {
       headers: headers,
       isReturnFuture: true,
     );
+    
     if (resp.message.isError) {
       print(resp.data);
     } else {
