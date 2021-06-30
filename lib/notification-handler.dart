@@ -10,9 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     new FlutterLocalNotificationsPlugin();
 
-
-
-void showNotification(RemoteNotification noti) async {
+void showNotification(RemoteNotification? noti) async {
   if (noti == null) return;
   SharedPreferences pref = await SharedPreferences.getInstance();
 
@@ -30,8 +28,11 @@ void showNotification(RemoteNotification noti) async {
       priority: Priority.high,
     );
 
+    var iOSPlatformChannelSpecifics = IOSNotificationDetails();
+
     var platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
+      iOS: iOSPlatformChannelSpecifics,
     );
 
     await flutterLocalNotificationsPlugin.show(
@@ -50,6 +51,7 @@ class NotificationHandler extends BaseNetwork {
     var initializationSettingsAndroid =
         new AndroidInitializationSettings('@mipmap/ic_launcher');
     var initializationSettingsIOS = IOSInitializationSettings();
+    NotificationDetails();
     var initializationSettings = InitializationSettings(
         android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
     flutterLocalNotificationsPlugin.initialize(initializationSettings,
@@ -63,10 +65,19 @@ class NotificationHandler extends BaseNetwork {
   }
 
   //!Can't stop showing foreground notification
-  void registerNotification() {
-    _firebaseMessaging
-        .requestPermission(provisional: true)
-        .then((value) => _firebaseMessaging.getToken().then(_addToken));
+  void registerNotification() async {
+    var token = await _firebaseMessaging.getToken();
+    if (token == null) return;
+    FirebaseConstant.token = token;
+    print(token);
+    await _firebaseMessaging.requestPermission(provisional: true);
+
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print(message.notification!.body);
@@ -82,11 +93,6 @@ class NotificationHandler extends BaseNetwork {
       data: {'title': 'tt', 'body': 'bb'},
       messageId: FirebaseConstant.token,
     );
-  }
-
-  void _addToken(String? token) {
-    print(token);
-    FirebaseConstant.token = token!;
   }
 
   Future<void> sendNotification({String? title, String? subtitle}) async {
@@ -114,7 +120,7 @@ class NotificationHandler extends BaseNetwork {
       headers: headers,
       isReturnFuture: true,
     );
-    
+
     if (resp.message.isError) {
       print(resp.data);
     } else {
